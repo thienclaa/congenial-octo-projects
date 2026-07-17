@@ -50,3 +50,11 @@ Data pipelines were orchestrated through Python workflows to ensure reliable dai
 - Semantic Models
 - DAX
 - Python
+
+## Key Responsibilities
+
+- Owned the enterprise sales semantic model.
+- Designed KPI frameworks for executive reporting.
+- Collaborated with business stakeholders to translate reporting requirements into analytical solutions.
+- Maintained production reporting pipelines and monitored daily data quality.
+- Optimized reporting performance to ensure reliable daily operations.
