@@ -45,7 +45,7 @@ Techniques
 • SELECTEDVALUE()
 • Dynamic Time Intelligence
 
-===============================================================================
+--------------------------
 */
 
 VAR SelectedMetric =
