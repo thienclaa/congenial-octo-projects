@@ -1,0 +1,246 @@
+/*
+===============================================================================
+Enterprise Dynamic KPI Engine
+===============================================================================
+
+Project:
+Enterprise Sales Analytics Platform
+
+Description:
+This DAX engine dynamically evaluates business KPIs across multiple business
+domains using a single reusable semantic layer.
+
+Supported Business Domains
+--------------------------
+• Sales Analytics
+• Product Analytics
+• Promotion Analytics
+• Customer Analytics
+• Payment Analytics
+• Customer Service Analytics
+• Executive KPI Reporting
+
+Supported Metrics
+-----------------
+• Revenue
+• Successful Orders
+• Average Order Value
+• Customer Service
+• Call Center
+• FriendSell
+• Conversion Rate
+
+Supported Time Granularity
+--------------------------
+• Year
+• Month
+• Week
+• Date
+
+Techniques
+----------
+• SWITCH(TRUE())
+• CALCULATE()
+• VAR / RETURN
+• WINDOW()
+• ORDERBY()
+• PARTITIONBY()
+• SELECTEDVALUE()
+• Dynamic Time Intelligence
+
+===============================================================================
+*/
+
+VAR SelectedMetric =
+    SELECTEDVALUE(
+        MetricGroup[Metric]
+    )
+
+VAR SelectedTimeRange =
+    SELECTEDVALUE(
+        'Time Range'[Time Range]
+    )
+
+VAR SelectedCompare =
+    SELECTEDVALUE(
+        Compare[Compare]
+    )
+
+VAR MinDate =
+    MIN(
+        'dimDate'[Date]
+    )
+
+VAR MaxDate =
+    MAX(
+        'dimDate'[Date]
+    )
+
+VAR StartDateOfMonth =
+    IF(
+        YEAR(MinDate)=YEAR(MaxDate)
+            && MONTH(MinDate)=MONTH(MaxDate),
+        MinDate,
+        DATE(
+            YEAR(MaxDate),
+            MONTH(MaxDate),
+            1
+        )
+    )
+
+VAR StartDateOfWeek =
+    MaxDate
+        - WEEKDAY(MaxDate,2)
+        + 1
+
+VAR YearWindow =
+WINDOW(
+    0,
+    ABS,
+    0,
+    REL,
+    ALL('dimDate'),
+    ORDERBY('dimDate'[Date]),
+    PARTITIONBY('dimDate'[Year])
+)
+
+VAR MonthWindow =
+WINDOW(
+    0,
+    ABS,
+    0,
+    REL,
+    ALL('dimDate'),
+    ORDERBY('dimDate'[Date]),
+    PARTITIONBY('dimDate'[Month & Year])
+)
+
+VAR WeekWindow =
+WINDOW(
+    0,
+    ABS,
+    0,
+    REL,
+    ALL('dimDate'),
+    ORDERBY('dimDate'[Date]),
+    PARTITIONBY('dimDate'[Year & Week])
+)
+
+RETURN
+
+SWITCH(
+
+    TRUE(),
+
+    //----------------------------------------------------------------------
+    // Revenue
+    //----------------------------------------------------------------------
+
+    SelectedMetric="Revenue"
+        && SelectedTimeRange="Year",
+
+    CALCULATE(
+        [Revenue],
+        YearWindow
+    ),
+
+    SelectedMetric="Revenue"
+        && SelectedTimeRange="Month",
+
+    CALCULATE(
+        [Revenue],
+        MonthWindow
+    ),
+
+    SelectedMetric="Revenue"
+        && SelectedTimeRange="Week",
+
+    CALCULATE(
+        [Revenue],
+        WeekWindow
+    ),
+
+    //----------------------------------------------------------------------
+    // Successful Orders
+    //----------------------------------------------------------------------
+
+    SelectedMetric="Orders"
+        && SelectedTimeRange="Year",
+
+    CALCULATE(
+        [Successful Orders],
+        YearWindow
+    ),
+
+    SelectedMetric="Orders"
+        && SelectedTimeRange="Month",
+
+    CALCULATE(
+        [Successful Orders],
+        MonthWindow
+    ),
+
+    //----------------------------------------------------------------------
+    // Average Order Value
+    //----------------------------------------------------------------------
+
+    SelectedMetric="AOV",
+
+    ROUND(
+
+        CALCULATE(
+            [Average Order Value],
+            MonthWindow
+        ),
+
+        0
+
+    ),
+
+    //----------------------------------------------------------------------
+    // Customer Service
+    //----------------------------------------------------------------------
+
+    SelectedMetric="Customer Service",
+
+    CALCULATE(
+
+        [Customer Service KPI],
+
+        MonthWindow
+
+    ),
+
+    //----------------------------------------------------------------------
+    // FriendSell
+    //----------------------------------------------------------------------
+
+    SelectedMetric="FriendSell",
+
+    CALCULATE(
+
+        [FriendSell Traffic],
+
+        MonthWindow
+
+    ),
+
+    //----------------------------------------------------------------------
+    // Default
+    //----------------------------------------------------------------------
+
+    BLANK()
+
+)
+
+/*
+===============================================================================
+
+Additional business rules have been omitted from this public repository.
+
+The production semantic model contains approximately 477 reusable measures
+supporting enterprise analytics across Sales, Customer Analytics,
+Promotions, Payment, Customer Service, and Executive Reporting.
+
+===============================================================================
+*/
