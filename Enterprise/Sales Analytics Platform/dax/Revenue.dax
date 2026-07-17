@@ -1,0 +1,4 @@
+Revenue =
+SUM(
+    factDoanhSo[Thành Tiền Trước VAT]
+)
