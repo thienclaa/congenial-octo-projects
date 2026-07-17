@@ -231,13 +231,11 @@ SWITCH(
 )
 
 /*
-===============================================================================
-
-Additional business rules have been omitted from this public repository.
 
 The production semantic model contains approximately 477 reusable measures
 supporting enterprise analytics across Sales, Customer Analytics,
 Promotions, Payment, Customer Service, and Executive Reporting.
 
-===============================================================================
+/*
+Remaining business rules omitted for brevity.
 */
