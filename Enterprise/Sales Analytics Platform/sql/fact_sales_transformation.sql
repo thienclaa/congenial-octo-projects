@@ -1,14 +1,13 @@
 /*
-===============================================================================
+-----------
 Enterprise Sales Analytics Platform
-
 Description
 -----------
 Builds the Sales Fact dataset for the Power BI Semantic Model by integrating
 sales transactions with product, store, payment, and order channel dimensions.
 
 Note
-----
+-----------
 This is a simplified version of the production query.
 Internal schemas, proprietary business rules, and sensitive mappings have been
 anonymized for confidentiality.
@@ -20,8 +19,7 @@ CTE
 LEFT JOIN
 CASE WHEN
 Business Rule Transformation
-
-===============================================================================
+-----------
 */
 
 WITH base_data AS (
