@@ -40,7 +40,7 @@ The solution delivers:
 
 ```mermaid
 flowchart TD
-    A[SQL Server] --> B[Azure Synapse Analytics] --> C[Databricks]
+    A[SQL Server] --> B[Azure Synapse Analytics] --> B[Databricks]
     B --> C[Databricks]
     C --> D[Power BI Dataflows]
     D --> E[Power BI Semantic Model]
