@@ -1,7 +1,0 @@
-Successful Orders =
-CALCULATE(
-    DISTINCTCOUNT(
-        factDoanhSo[Số Đơn Hàng Ecom]
-    ),
-    factDoanhSo[Đơn thành công]=1
-)
