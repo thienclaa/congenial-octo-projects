@@ -1,38 +1,43 @@
-## Enterprise Dynamic KPI Engine
+/*
+===============================================================================
+Enterprise Dynamic KPI Engine
 
-Project:
+Project
+-------
 Enterprise Sales Analytics Platform
 
-Description:
-This DAX engine dynamically evaluates business KPIs across multiple business
-domains using a single reusable semantic layer.
+Description
+-----------
+Dynamic KPI engine powering executive Power BI dashboards through a reusable
+semantic model. A single calculation engine evaluates multiple business KPIs
+across different time granularities while minimizing duplicated business logic.
 
-Supported Business Domains
---------------------------
-• Sales Analytics
-• Product Analytics
-• Promotion Analytics
-• Customer Analytics
-• Payment Analytics
-• Customer Service Analytics
-• Executive KPI Reporting
+Architecture
+------------
+Metric Selection
+        │
+Time Selection
+        │
+Dynamic Calculation Engine
+        │
+Semantic Model
+        │
+Power BI Dashboard
 
-Supported Metrics
------------------
+Capabilities
+------------
+• Dynamic KPI Selection
+• Dynamic Time Intelligence
+• Executive Scorecards
+• Multi-domain KPI Calculation
+
+Representative Metrics
+----------------------
 • Revenue
 • Successful Orders
 • Average Order Value
-• Customer Service
-• Call Center
-• FriendSell
-• Conversion Rate
-
-Supported Time Granularity
---------------------------
-• Year
-• Month
-• Week
-• Date
+• Customer Service KPI
+• FriendSell Traffic
 
 Techniques
 ----------
@@ -43,199 +48,154 @@ Techniques
 • ORDERBY()
 • PARTITIONBY()
 • SELECTEDVALUE()
-• Dynamic Time Intelligence
 
---------------------------
+===============================================================================
 */
 
 VAR SelectedMetric =
-    SELECTEDVALUE(
-        MetricGroup[Metric]
-    )
+    SELECTEDVALUE ( MetricGroup[Metric] )
 
 VAR SelectedTimeRange =
-    SELECTEDVALUE(
-        'Time Range'[Time Range]
-    )
-
-VAR SelectedCompare =
-    SELECTEDVALUE(
-        Compare[Compare]
-    )
-
-VAR MinDate =
-    MIN(
-        'dimDate'[Date]
-    )
-
-VAR MaxDate =
-    MAX(
-        'dimDate'[Date]
-    )
-
-VAR StartDateOfMonth =
-    IF(
-        YEAR(MinDate)=YEAR(MaxDate)
-            && MONTH(MinDate)=MONTH(MaxDate),
-        MinDate,
-        DATE(
-            YEAR(MaxDate),
-            MONTH(MaxDate),
-            1
-        )
-    )
-
-VAR StartDateOfWeek =
-    MaxDate
-        - WEEKDAY(MaxDate,2)
-        + 1
+    SELECTEDVALUE ( 'Time Range'[Time Range] )
 
 VAR YearWindow =
-WINDOW(
-    0,
-    ABS,
-    0,
-    REL,
-    ALL('dimDate'),
-    ORDERBY('dimDate'[Date]),
-    PARTITIONBY('dimDate'[Year])
-)
+    WINDOW (
+        0, ABS,
+        0, REL,
+        ALL ( 'dimDate' ),
+        ORDERBY ( 'dimDate'[Date] ),
+        PARTITIONBY ( 'dimDate'[Year] )
+    )
 
 VAR MonthWindow =
-WINDOW(
-    0,
-    ABS,
-    0,
-    REL,
-    ALL('dimDate'),
-    ORDERBY('dimDate'[Date]),
-    PARTITIONBY('dimDate'[Month & Year])
-)
+    WINDOW (
+        0, ABS,
+        0, REL,
+        ALL ( 'dimDate' ),
+        ORDERBY ( 'dimDate'[Date] ),
+        PARTITIONBY ( 'dimDate'[Month & Year] )
+    )
 
 VAR WeekWindow =
-WINDOW(
-    0,
-    ABS,
-    0,
-    REL,
-    ALL('dimDate'),
-    ORDERBY('dimDate'[Date]),
-    PARTITIONBY('dimDate'[Year & Week])
-)
+    WINDOW (
+        0, ABS,
+        0, REL,
+        ALL ( 'dimDate' ),
+        ORDERBY ( 'dimDate'[Date] ),
+        PARTITIONBY ( 'dimDate'[Year & Week] )
+    )
 
 RETURN
 
-SWITCH(
+SWITCH (
 
     TRUE(),
 
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
     // Revenue
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
 
-    SelectedMetric="Revenue"
-        && SelectedTimeRange="Year",
+    SelectedMetric = "Revenue",
 
-    CALCULATE(
-        [Revenue],
-        YearWindow
-    ),
+        SWITCH (
 
-    SelectedMetric="Revenue"
-        && SelectedTimeRange="Month",
+            SelectedTimeRange,
 
-    CALCULATE(
-        [Revenue],
-        MonthWindow
-    ),
+            "Year",
+                CALCULATE ( [Revenue], YearWindow ),
 
-    SelectedMetric="Revenue"
-        && SelectedTimeRange="Week",
+            "Month",
+                CALCULATE ( [Revenue], MonthWindow ),
 
-    CALCULATE(
-        [Revenue],
-        WeekWindow
-    ),
+            "Week",
+                CALCULATE ( [Revenue], WeekWindow ),
 
-    //----------------------------------------------------------------------
-    // Successful Orders
-    //----------------------------------------------------------------------
-
-    SelectedMetric="Orders"
-        && SelectedTimeRange="Year",
-
-    CALCULATE(
-        [Successful Orders],
-        YearWindow
-    ),
-
-    SelectedMetric="Orders"
-        && SelectedTimeRange="Month",
-
-    CALCULATE(
-        [Successful Orders],
-        MonthWindow
-    ),
-
-    //----------------------------------------------------------------------
-    // Average Order Value
-    //----------------------------------------------------------------------
-
-    SelectedMetric="AOV",
-
-    ROUND(
-
-        CALCULATE(
-            [Average Order Value],
-            MonthWindow
+            [Revenue]
         ),
 
-        0
+    //------------------------------------------------------------------
+    // Successful Orders
+    //------------------------------------------------------------------
 
-    ),
+    SelectedMetric = "Orders",
 
-    //----------------------------------------------------------------------
-    // Customer Service
-    //----------------------------------------------------------------------
+        SWITCH (
 
-    SelectedMetric="Customer Service",
+            SelectedTimeRange,
 
-    CALCULATE(
+            "Year",
+                CALCULATE ( [Successful Orders], YearWindow ),
 
-        [Customer Service KPI],
+            "Month",
+                CALCULATE ( [Successful Orders], MonthWindow ),
 
-        MonthWindow
+            "Week",
+                CALCULATE ( [Successful Orders], WeekWindow ),
 
-    ),
+            [Successful Orders]
+        ),
 
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
+    // Average Order Value
+    //------------------------------------------------------------------
+
+    SelectedMetric = "Average Order Value",
+
+        ROUND (
+
+            CALCULATE (
+                [Average Order Value],
+                MonthWindow
+            ),
+
+            0
+
+        ),
+
+    //------------------------------------------------------------------
+    // Customer Service KPI
+    //------------------------------------------------------------------
+
+    SelectedMetric = "Customer Service",
+
+        CALCULATE (
+
+            [Customer Service KPI],
+
+            MonthWindow
+
+        ),
+
+    //------------------------------------------------------------------
     // FriendSell
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
 
-    SelectedMetric="FriendSell",
+    SelectedMetric = "FriendSell",
 
-    CALCULATE(
+        CALCULATE (
 
-        [FriendSell Traffic],
+            [FriendSell Traffic],
 
-        MonthWindow
+            MonthWindow
 
-    ),
+        ),
 
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
     // Default
-    //----------------------------------------------------------------------
+    //------------------------------------------------------------------
 
     BLANK()
 
 )
 
 /*
+Production Semantic Model
 
-The production semantic model contains approximately 477 reusable measures
-supporting enterprise analytics across Sales, Customer Analytics,
-Promotions, Payment, Customer Service, and Executive Reporting.
+• 47 Tables
+• 77 Relationships
+• 477 Measures
 
-/*
-Remaining business rules omitted for brevity.
+This repository contains representative DAX patterns extracted from the
+production semantic model. Business-specific calculations and proprietary
+logic have been intentionally omitted.
 */
