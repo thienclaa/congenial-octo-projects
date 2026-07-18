@@ -1,5 +1,0 @@
-Average Order Value =
-DIVIDE(
-    [Revenue],
-    [Successful Orders]
-)
