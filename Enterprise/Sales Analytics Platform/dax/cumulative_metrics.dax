@@ -1,0 +1,59 @@
+VAR SelectedTimeRange =
+    SELECTEDVALUE('Time Range'[Time Range])
+
+VAR SelectedCompare =
+    SELECTEDVALUE('Compare'[Compare])
+
+RETURN
+
+SWITCH(
+
+    TRUE(),
+
+    SelectedTimeRange = "Month"
+        && SelectedCompare = "So sánh tổng",
+
+    CALCULATE(
+
+        [DS - Tổng],
+
+        WINDOW(
+            0,
+            ABS,
+            0,
+            REL,
+            ALL('dimDate'),
+            ORDERBY('dimDate'[Date]),
+            PARTITIONBY('dimDate'[Month & Year])
+        )
+
+    ),
+
+    BLANK()
+
+)
+  /*
+Production version supports
+
+• Year
+• Month
+• Week
+• Date
+
+Comparison Types
+
+• Total
+• Daily Average
+
+Business Metrics
+
+• Revenue
+• Orders
+• AOV
+• Conversion
+• Customer Service
+• Promotion
+• Backend Orders
+
+Remaining business rules omitted for brevity.
+*/
