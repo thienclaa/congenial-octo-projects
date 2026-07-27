@@ -6,7 +6,7 @@ Enterprise analytics platform for monitoring customer service operations, SLA co
 
 ## Overview
 
-Designed and maintained an enterprise Customer Service Analytics Platform supporting omnichannel customer support operations.
+Customer Service Analytics Platform is an enterprise Business Intelligence solution that automates ETL pipelines, centralizes customer service data, and delivers operational analytics through reusable Power BI semantic models.
 
 The platform integrates chat sessions, SLA metrics, response times, assignment events, and operational KPIs into centralized Power BI semantic models, enabling real-time operational monitoring for Customer Service teams and management.
 
