@@ -1,0 +1,19 @@
+Agent KPI % =
+
+VAR TotalSessions =
+    [Tổng số phiên]
+
+VAR SuccessfulSessions =
+    [Số phiên đạt KPI]
+
+RETURN
+
+DIVIDE(
+
+    SuccessfulSessions,
+
+    TotalSessions,
+
+    BLANK()
+
+)
