@@ -1,0 +1,32 @@
+-- Total Sessions
+
+Tổng số phiên =
+SUM(_f_daily_kpi_on_turns[all_sessions])
+
+-- Successful Sessions
+
+Số phiên đạt KPI =
+SUM(_f_daily_kpi_on_turns[kpi_sessions])
+
+-- Failed Sessions
+
+Số phiên không đạt KPI =
+[Tổng số phiên] - [Số phiên đạt KPI]
+
+-- KPI %
+
+Tỷ lệ đạt KPI =
+DIVIDE(
+    [Số phiên đạt KPI],
+    [Tổng số phiên],
+    BLANK()
+)
+
+-- Failed KPI %
+
+Tỷ lệ không đạt KPI =
+DIVIDE(
+    [Số phiên không đạt KPI],
+    [Tổng số phiên],
+    BLANK()
+)
