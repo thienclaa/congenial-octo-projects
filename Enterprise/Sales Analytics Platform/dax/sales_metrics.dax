@@ -1,13 +1,3 @@
-# Business Metrics
-
-## Overview
-
-The enterprise semantic model centralizes business calculations into reusable DAX measures supporting executive reporting across multiple business functions.
-
-The model currently contains **477 reusable business measures** organized around different analytical domains.
-
----
-
 # Sales Analytics
 
 Representative measures include:
