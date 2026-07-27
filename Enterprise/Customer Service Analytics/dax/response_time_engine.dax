@@ -1,0 +1,23 @@
+Trung vị thời gian phản hồi trên 1 lượt chat =
+
+CALCULATE(
+
+    MEDIANX(
+
+        _f_daily_all_steps,
+
+        DIVIDE(
+
+            [step_duration],
+
+            [number_of_session_lines],
+
+            BLANK()
+
+        )
+
+    ),
+
+    _d_step[id] IN {2,3,5}
+
+)
