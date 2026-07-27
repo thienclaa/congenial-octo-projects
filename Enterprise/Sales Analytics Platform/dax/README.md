@@ -10,4 +10,4 @@ Rather than exposing every measure, this folder highlights representative exampl
 
 The platform is powered by a reusable **Dynamic KPI Engine** that dynamically evaluates business metrics based on selected KPI, time granularity, and comparison mode, enabling a single semantic layer to support hundreds of executive KPIs.
 
-See: `dax/Dynamic_KPI_Engine.dax`
+See: `dax/dynamic_kpi_engine.dax`
