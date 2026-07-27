@@ -1,0 +1,41 @@
+WITH night_sessions AS (
+
+    SELECT
+
+        employee_id,
+
+        session_id,
+
+        response_time,
+
+        CASE
+
+            WHEN CAST(assign_time AS TIME)
+                 BETWEEN '22:00:00' AND '23:59:59'
+
+              OR CAST(assign_time AS TIME)
+                 BETWEEN '00:00:00' AND '07:59:59'
+
+            THEN 1
+
+            ELSE 0
+
+        END AS is_night_shift
+
+    FROM fact_chat_log
+
+)
+
+SELECT
+
+    employee_id,
+
+    COUNT(*) AS total_sessions,
+
+    AVG(response_time) AS avg_response_time
+
+FROM night_sessions
+
+WHERE is_night_shift = 1
+
+GROUP BY employee_id;
