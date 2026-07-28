@@ -1,47 +1,61 @@
-# AI Chat Labeling Pipeline
+# AI Chat Labeling Platform
 
-LLM-powered data labeling pipeline for automatically classifying customer conversations into business categories, sentiment, and operational intents.
+LLM-powered analytics platform for automatically classifying customer conversations into structured business labels and sentiment categories.
 
 ## Overview
 
-Developed an AI-assisted labeling pipeline to classify customer chat conversations using Llama.
+Developed an AI-assisted labeling platform to automate customer conversation classification using Llama.
 
-The pipeline automatically categorizes customer conversations, identifies sentiment, and generates structured labels for downstream analytics and Power BI reporting.
+The platform transforms unstructured chat conversations into structured datasets supporting customer service analytics and Power BI reporting.
 
 ## Business Problem
 
-Customer service teams handled thousands of chat conversations daily, making manual labeling slow, inconsistent, and difficult to scale. :contentReference[oaicite:0]{index=0}
+Customer conversations were manually reviewed, making the labeling process slow, inconsistent, and difficult to scale.
+
+Business teams required standardized labels to analyze customer intent, sentiment, complaints, and operational trends.
 
 ## Solution
 
-Built an automated labeling pipeline using Llama to classify conversations into predefined business categories and sentiment labels.
+Developed an automated labeling pipeline combining Python, Llama, SQL Server, and Power BI.
 
-The pipeline supports:
+The platform provides:
 
-- Business category classification
-- Sentiment analysis
-- Complaint detection
-- Positive feedback detection
-- Conversation intent extraction
-- Structured label generation
+- Conversation labeling
+- Sentiment classification
+- Business intent detection
+- Complaint identification
+- Order conversation detection
+- Weekly trend monitoring
 
-## AI Categories
+## Semantic Model Overview
 
-- General Inquiry
-- Product Consultation
-- Delivery
-- Complaint
-- Positive Feedback
-- Loyalty Program
-- Payment
-- Exchange & Refund
-- System Issues
-- Others
+| Metric | Value |
+|---------|------:|
+| Tables | 7 |
+| Measures | 24 |
+| Label Measures | 13 |
+| Date Measures | 5 |
 
 ## Technology Stack
 
-- Python
+### AI
+
 - Llama
 - Prompt Engineering
-- SQL
+
+### Data Platform
+
+- SQL Server
+
+### Data Engineering
+
+- Python
+
+### Business Intelligence
+
 - Power BI
+- DAX
+
+## Repository Structure
+
+...
