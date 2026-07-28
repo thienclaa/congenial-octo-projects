@@ -1,31 +1,55 @@
 # AI Chat Labeling Platform
 
-LLM-powered analytics platform for automatically classifying customer conversations into structured business labels and sentiment categories.
-
 ## Overview
 
-Developed an AI-assisted labeling platform to automate customer conversation classification using Llama.
+Developed an AI-assisted analytics platform to automatically classify customer
+chat conversations into structured business labels.
 
-The platform transforms unstructured chat conversations into structured datasets supporting customer service analytics and Power BI reporting.
+The platform combines Llama, Python, SQL Server, and Power BI to transform
+unstructured conversations into reusable datasets supporting customer service
+analytics and executive reporting.
 
 ## Business Problem
 
-Customer conversations were manually reviewed, making the labeling process slow, inconsistent, and difficult to scale.
+Customer conversations were manually reviewed before analysis.
 
-Business teams required standardized labels to analyze customer intent, sentiment, complaints, and operational trends.
+Manual labeling was:
+
+- Time-consuming
+- Inconsistent across reviewers
+- Difficult to scale
+- Unsuitable for large-volume analytics
+
+Business teams required standardized labels to analyze customer intent,
+customer sentiment, complaint trends, and ordering behavior.
 
 ## Solution
 
-Developed an automated labeling pipeline combining Python, Llama, SQL Server, and Power BI.
+Developed an AI-powered labeling pipeline using Llama.
 
-The platform provides:
+The pipeline automatically:
 
-- Conversation labeling
-- Sentiment classification
-- Business intent detection
-- Complaint identification
-- Order conversation detection
-- Weekly trend monitoring
+- Reads raw conversations
+- Generates structured labels
+- Detects customer sentiment
+- Identifies business intent
+- Produces datasets for Power BI reporting
+
+flowchart TD
+
+A[Raw Chat]
+
+--> B[Python Pipeline]
+
+--> C[Llama]
+
+--> D[Validation]
+
+--> E[SQL Server]
+
+--> F[Semantic Model]
+
+--> G[Power BI]
 
 ## Semantic Model Overview
 
@@ -33,29 +57,44 @@ The platform provides:
 |---------|------:|
 | Tables | 7 |
 | Measures | 24 |
-| Label Measures | 13 |
-| Date Measures | 5 |
+| Core Measure Table | vd_chatbot_labeling_flc |
+| Date Table | dateDim |
+
+## Business Metrics
+
+### Conversation
+
+- Total Conversations
+- Total Customers
+
+### Sentiment
+
+- Negative Conversations
+- Negative Conversation Rate
+
+### Business Outcome
+
+- Conversations with Orders
+
+### Weekly Trend
+
+- Week-over-Week Change
 
 ## Technology Stack
 
 ### AI
 
 - Llama
-- Prompt Engineering
-
-### Data Platform
-
-- SQL Server
 
 ### Data Engineering
 
 - Python
 
+### Database
+
+- SQL Server
+
 ### Business Intelligence
 
 - Power BI
 - DAX
-
-## Repository Structure
-
-...
