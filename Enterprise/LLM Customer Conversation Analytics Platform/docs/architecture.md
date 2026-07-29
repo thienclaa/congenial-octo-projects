@@ -1,5 +1,3 @@
-# Architecture
-
 ## Component 1
 
 SQL Server
