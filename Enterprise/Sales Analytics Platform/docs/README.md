@@ -41,8 +41,6 @@ The model spans several analytical areas:
 
 ## Architecture
 
-![Semantic model overview](../images/semantic-model-overview.png)
-
 For a more detailed explanation, see:
 
 - [Model Architecture](architecture.md)
