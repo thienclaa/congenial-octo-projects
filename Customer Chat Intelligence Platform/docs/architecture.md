@@ -543,22 +543,4 @@ The architecture is documented at a level that demonstrates the solution design 
 
 ---
 
-# 16. Public vs Production Architecture
-
-The public repository represents the architecture conceptually:
-
-```text
-Public Documentation
-
-AI
- ↓
-SQL Server
- ↓
-Fact Tables
- ↓
-Power BI
-```
-
-The actual production environment may contain additional components, transformations, monitoring, orchestration, security controls, and infrastructure that are not represented here.
-
 This repository should therefore be interpreted as a **sanitized architecture and methodology reference**, rather than a complete production deployment package.
