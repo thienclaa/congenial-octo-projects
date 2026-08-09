@@ -6,8 +6,4 @@ Negative Rate
 
 Order
 
-DoctorMy
-
-Gemini
-
 ...
