@@ -17,7 +17,7 @@ Llama 3.1 8B Instruct
         ↓
 LoRA / QLoRA Fine-Tuning
         ↓
-Pharmacy V3
+V3 Model
         ↓
 GGUF Conversion
         ↓
@@ -142,7 +142,7 @@ Llama 3.1 8B
       ↓
 LoRA / QLoRA
       ↓
-Pharmacy-domain adaptation
+domain adaptation
 ```
 
 Instead of updating the complete base model, LoRA adapters are trained on the target task.
@@ -192,7 +192,7 @@ Raw Labeled Conversations
    LoRA / QLoRA Training
            │
            ▼
-     Pharmacy V3 Model
+     V3 Model
 ```
 
 The goal is to adapt the model to the vocabulary, business categories, and conversational patterns specific to the pharmacy customer-service domain.
@@ -219,9 +219,9 @@ The objective is to make it a more consistent **customer conversation classifica
 
 ---
 
-# 10. Pharmacy V3
+# 10. V3 Model
 
-The fine-tuned model is referred to as **Pharmacy V3**.
+The fine-tuned model is referred to as **V3 Model**.
 
 Conceptually:
 
@@ -235,10 +235,10 @@ Pharmacy Customer Chat Dataset
       Fine-Tuning
            │
            ▼
-       Pharmacy V3
+       V3 Model
 ```
 
-Pharmacy V3 serves as the AI labeling component of the broader analytics platform.
+V3 Model serves as the AI labeling component of the broader analytics platform.
 
 ---
 
@@ -280,7 +280,7 @@ Application / Inference Script
           Ollama
              │
              ▼
-      Pharmacy V3 Model
+      V3 Model
              │
              ▼
        Model Response
@@ -439,7 +439,7 @@ A synthetic example:
 
 ```text
 Customer:
-"Chị đặt thuốc hôm qua nhưng đơn vẫn chưa giao,
+"Chị đặt đơn hôm qua nhưng đơn vẫn chưa giao,
 em kiểm tra giúp chị với."
 ```
 
@@ -486,126 +486,9 @@ This example is synthetic and is provided only to demonstrate the pipeline.
 
 ---
 
-# 18. Model Evaluation
+# 18. Summary
 
-A production-grade implementation should evaluate the classifier using a held-out dataset rather than relying only on training loss.
-
-Recommended evaluation metrics include:
-
-* Accuracy
-* Precision
-* Recall
-* F1-score
-* Confusion matrix
-* Per-label performance
-* Sentiment classification performance
-
-For multi-class business labeling, per-class performance is particularly important because overall accuracy can hide poor performance on less frequent categories.
-
-The public repository does not publish proprietary production evaluation results.
-
----
-
-# 19. Data Quality Considerations
-
-AI-generated labels should be treated as analytical outputs that require monitoring.
-
-Potential issues include:
-
-* Ambiguous customer intent
-* Multiple intents in one conversation
-* Mixed sentiment
-* Long conversations
-* Vietnamese language variation
-* Spelling errors
-* Informal customer language
-* New business scenarios not represented in the training data
-
-A robust production implementation should therefore include mechanisms for monitoring classification quality and identifying uncertain or previously unseen patterns.
-
----
-
-# 20. Human-in-the-Loop Extension
-
-A potential future architecture is:
-
-```text
-Customer Conversation
-        ↓
-       LLM
-        ↓
-   Classification
-        │
-   ┌────┴─────┐
-   │          │
-High       Low-confidence
-confidence    │
-   │          ▼
-   │      Human Review
-   │          │
-   └────┬─────┘
-        ▼
-   SQL Server
-        ↓
-   Power BI
-```
-
-Human-reviewed records can potentially be reused as additional training data for future model versions.
-
----
-
-# 21. Model Versioning
-
-The model should be treated as a versioned component of the data platform.
-
-For example:
-
-```text
-Pharmacy V1
-     ↓
-Pharmacy V2
-     ↓
-Pharmacy V3
-     ↓
-Future Versions
-```
-
-Each version should ideally track:
-
-* Training dataset version
-* Label taxonomy version
-* Base model
-* Fine-tuning configuration
-* Evaluation results
-* Quantization format
-* Deployment configuration
-
-This makes changes in model behavior easier to audit and reproduce.
-
----
-
-# 22. Confidentiality
-
-The following production assets are intentionally excluded:
-
-* Training dataset
-* Customer conversations
-* Fine-tuned model weights
-* GGUF production model
-* Production Ollama configuration
-* Production inference scripts
-* Internal API endpoints
-* Production database schemas
-* Credentials
-* Internal business taxonomy
-
-This repository documents the **technical approach and architecture**, not the proprietary implementation itself.
-
----
-
-# 23. Summary
-
-The AI labeling pipeline transforms pharmacy customer conversations into structured business signals:
+The AI labeling pipeline transforms customer conversations into structured business signals:
 
 ```text
 Customer Conversation
@@ -614,7 +497,7 @@ Llama 3.1 8B
         ↓
 LoRA Fine-Tuning
         ↓
-Pharmacy V3
+V3 Model
         ↓
 Ollama
         ↓
@@ -630,3 +513,5 @@ Business Analytics
 The key architectural principle is the separation between **AI inference**, **data storage**, and **business analytics**.
 
 This allows the LLM to operate as a specialized classification component while SQL Server and Power BI provide the persistence, semantic modeling, and analytical capabilities required by the business.
+
+This repository documents the **technical approach and architecture**, not the proprietary implementation itself.
