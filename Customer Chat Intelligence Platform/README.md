@@ -540,24 +540,6 @@ Decision Support
 
 ---
 
-# Limitations
-
-The public repository does not include:
-
-* Production customer conversations
-* Production SQL Server data
-* Production database schemas
-* Production credentials
-* Internal ETL implementation
-* Production Power BI reports
-* Production semantic model files
-* Production GGUF model files
-* Proprietary business taxonomy in full
-
-The repository therefore focuses on the **architecture, methodology, analytical design, and reproducible concepts** rather than exposing the production implementation.
-
----
-
 # Future Improvements
 
 Potential extensions include:
