@@ -22,10 +22,6 @@ Existing reporting relied on fragmented datasets, lengthy refresh cycles, and di
 
 Build a scalable BI solution that enables business users to monitor performance and identify actionable opportunities.
 
-## Achievement
-
-I built and maintained a production-scale Power BI analytics solution monitoring 100K+ daily transactions and supporting 100+ business users, combining SQL, Python, ETL, dimensional modeling, and Power BI to deliver sales, customer, and operational insights.
-
 ---
 
 ## Solution
@@ -41,6 +37,10 @@ The solution delivers:
 - Customer purchasing behavior analysis
 - Product performance monitoring
 - Operational reporting for business stakeholders
+
+## Achievement
+
+Built and maintained a production-scale Power BI analytics solution monitoring 100K+ daily transactions and supporting 100+ business users, combining SQL, Python, ETL, dimensional modeling, and Power BI to deliver sales, customer, and operational insights.
 
 ---
 
