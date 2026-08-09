@@ -218,20 +218,6 @@ The model is designed to generate a structured response containing:
 Labels: [business label]
 Sentiment: [Positive / Negative / Neutral / Mixed]
 ```
-
-Example:
-
-```text
-Input:
-"Đơn của em báo giao hôm qua nhưng đến giờ vẫn chưa nhận được."
-
-Output:
-Labels: Khiếu nại giao hàng
-Sentiment: Negative
-```
-
-The example above is illustrative only and does not contain production customer data.
-
 ---
 
 ## Business Label Taxonomy
