@@ -226,49 +226,11 @@ The labeling framework organizes customer conversations into major business cate
 
 ### Nghiệp vụ – Tư vấn – Hỏi đáp
 
-Examples include:
-
-* Product and medication consultation
-* Price inquiries
-* Stock availability
-* Promotions
-* Ordering
-* Order cancellation
-* Delivery inquiries
-* Usage and dosage questions
-* Product information
-
 ### Khiếu nại / Tiêu cực
-
-Examples include complaints related to:
-
-* Employees
-* Professional service
-* Operational processes
-* Delivery
-* Products
-* Pricing and payment
-* Returns
-* Invoices
-* System issues
 
 ### Phản hồi tích cực
 
-Examples include:
-
-* Positive feedback about pharmacists
-* Positive feedback about consultation
-* Positive service experience
-* Fast delivery
-* Product satisfaction
-
 ### Khác
-
-Examples include:
-
-* Social conversation
-* Unrelated conversations
-* Unidentified intent
 
 The exact production taxonomy is proprietary and is therefore not reproduced in full in this repository.
 
