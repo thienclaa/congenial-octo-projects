@@ -4,16 +4,14 @@
 
 The Power BI semantic model integrates customer conversation data, AI-generated conversation classifications, operational session information, conversation segmentation, and reference data into a centralized analytical model.
 
-The production model contains six main tables:
-
-| Public Name | Analytical Role |
+| Public Name | Production Table | Analytical Role |
 |---|---|---|
-| `dim_date` | Time-based analysis |
-| `dim_label` | Category / subcategory / label reference |
-| `fact_conversation` | Customer conversation analysis |
-| `fact_chat_labeling` | AI classification and sentiment analysis |
-| `fact_conversation_segment` | Conversation segmentation |
-| `fact_session_support` | Session and support context |
+| `dim_date` | `dateDim` | Time-based analysis |
+| `dim_label` | `d_subcategory_label_flc` | Category / subcategory / label reference |
+| `fact_conversation` | `f_omnichat_longchau_group` | Customer conversation analysis |
+| `fact_chat_labeling` | `vd_chatbot_labeling_flc` | AI classification and sentiment analysis |
+| `fact_conversation_segment` | `vf_omnichat_segment_flc` | Conversation segmentation |
+| `fact_session_support` | `vd_session_supporter_flc` | Session and support context |
 
 Production table names are replaced with public-safe names in the documentation. Individual production columns are intentionally not documented.
 
