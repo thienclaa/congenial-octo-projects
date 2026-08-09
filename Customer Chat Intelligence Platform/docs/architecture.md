@@ -139,23 +139,6 @@ AI Input
 
 The objective is to create a consistent input representation for the fine-tuned model.
 
-For example:
-
-```text
-Customer:
-"Đơn hàng của tôi khi nào giao?"
-
-Agent:
-"Dạ em kiểm tra đơn hàng cho anh/chị."
-
-Customer:
-"Tôi đã chờ từ hôm qua."
-```
-
-This conversation can then be passed to the AI labeling layer.
-
-The example is synthetic and is included only to illustrate the data flow.
-
 ---
 
 # 5. Layer 3 — AI Labeling
