@@ -2,91 +2,82 @@
 Database Utilities
 ------------------
 
-Shared database helper functions used by ETL modules.
+Reusable SQL Server helpers for the ETL pipeline.
 
-Connection details have been removed for portfolio purposes.
+Production connection details are loaded from environment variables
+and are never committed to source control.
 """
 
 import pyodbc
+import pandas as pd
+
+from .config import DATABASE_CONFIG
 
 
 def get_connection():
-    """
-    Create SQL Server connection.
+    """Create a SQL Server connection."""
 
-    Production credentials removed.
-    """
-
-    connection = pyodbc.connect(
-
-        DRIVER="{ODBC Driver 17 for SQL Server}",
-
-        SERVER="<SERVER>",
-
-        DATABASE="<DATABASE>",
-
-        UID="<USERNAME>",
-
-        PWD="<PASSWORD>",
-
-        TrustServerCertificate="yes"
-
+    return pyodbc.connect(
+        DRIVER=f"{{{DATABASE_CONFIG['driver']}}}",
+        SERVER=DATABASE_CONFIG["server"],
+        DATABASE=DATABASE_CONFIG["database"],
+        UID=DATABASE_CONFIG["username"],
+        PWD=DATABASE_CONFIG["password"],
+        TrustServerCertificate="yes",
     )
 
-    return connection
 
-
-def execute_sql(sql):
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(sql)
-
-    conn.commit()
-
-    cursor.close()
-
-    conn.close()
-
-
-def execute_many(sql_list):
+def execute_sql(sql: str, params=None):
+    """Execute a SQL statement."""
 
     conn = get_connection()
 
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    for sql in sql_list:
+        if params:
+            cursor.execute(sql, params)
+        else:
+            cursor.execute(sql)
 
-        cursor.execute(sql)
+        conn.commit()
 
-    conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
-    cursor.close()
+    finally:
+        cursor.close()
+        conn.close()
 
-    conn.close()
 
-
-def fetch_dataframe(sql):
-
-    import pandas as pd
+def fetch_dataframe(sql: str, params=None) -> pd.DataFrame:
+    """Execute a SELECT query and return a DataFrame."""
 
     conn = get_connection()
 
-    df = pd.read_sql(sql, conn)
+    try:
+        return pd.read_sql_query(
+            sql,
+            conn,
+            params=params,
+        )
 
-    conn.close()
+    finally:
+        conn.close()
 
-    return df
 
-
-def insert_dataframe(df, table_name):
-
+def insert_dataframe(
+    df: pd.DataFrame,
+    table_name: str,
+    engine=None,
+):
     """
-    Placeholder for dataframe loading.
+    Load a DataFrame into a target table.
 
-    Production implementation removed.
+    Production-specific loading implementation is excluded.
     """
 
-    pass
+    raise NotImplementedError(
+        "Production data-loading implementation removed."
+    )
