@@ -2,14 +2,18 @@
 
 ## 1. Architecture Overview
 
-The Customer Chat Intelligence Platform is designed as an end-to-end analytics pipeline that transforms unstructured customer conversations into structured business intelligence.
+The Customer Chat Intelligence Platform is an end-to-end analytics solution that transforms unstructured customer conversations into structured business intelligence.
 
-The architecture consists of five major layers:
+The architecture separates the AI inference layer from the analytical layer:
 
 ```text
 Customer Conversations
         ↓
+Conversation Processing
+        ↓
 AI Labeling
+        ↓
+Ollama Inference
         ↓
 SQL Server
         ↓
@@ -18,13 +22,13 @@ Power BI Semantic Model
 Business Analytics
 ```
 
-The AI inference layer and analytical layer are intentionally separated.
+The AI layer is responsible for interpreting customer conversations and generating structured classification results.
 
-The AI model is responsible for extracting structured signals from conversations, while SQL Server and Power BI are responsible for storing, modeling, aggregating, and analyzing those signals.
+SQL Server provides the persistent data layer, while Power BI provides semantic modeling, KPI definitions, and business reporting.
 
 ---
 
-## 2. High-Level Architecture
+# 2. High-Level Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
@@ -35,7 +39,7 @@ The AI model is responsible for extracting structured signals from conversations
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 CONVERSATION PROCESSING                     │
+│              CONVERSATION PROCESSING                        │
 │                                                             │
 │  Session preparation                                        │
 │  Conversation formatting                                    │
@@ -46,12 +50,19 @@ The AI model is responsible for extracting structured signals from conversations
 ┌─────────────────────────────────────────────────────────────┐
 │                       AI LAYER                              │
 │                                                             │
-│  Pharmacy V3                                                │
+│  Pharmacy-domain fine-tuned LLM                             │
 │  Llama 3.1 8B Instruct                                      │
-│  LoRA / QLoRA fine-tuning                                   │
+│  LoRA / QLoRA                                                │
 │                                                             │
-│                       Ollama                                │
-│                  Local model inference                      │
+│  Pharmacy V3                                                 │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     OLLAMA                                  │
+│                                                             │
+│  Local model inference                                      │
+│  Structured classification output                            │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                │ AI-generated attributes
@@ -59,32 +70,20 @@ The AI model is responsible for extracting structured signals from conversations
 ┌─────────────────────────────────────────────────────────────┐
 │                     SQL SERVER                              │
 │                                                             │
-│  ┌─────────────────────┐    ┌──────────────────────────┐   │
-│  │ Fact Conversation   │    │ Fact Chat Labeling       │   │
-│  │                     │    │                          │   │
-│  │ Session information │    │ AI classification        │   │
-│  │ Conversation data   │    │ Labels                   │   │
-│  │ Operational fields  │    │ Sentiment                │   │
-│  └──────────┬──────────┘    └────────────┬─────────────┘   │
-│             │                            │                 │
-│             └────────────┬───────────────┘                 │
-│                          │                                 │
-│                    Supporting Data                         │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
+│  Conversation / Omnichat Data                               │
+│  AI Labeling Data                                           │
+│  Supporting Analytical Data                                 │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     POWER BI                                │
+│                    POWER BI                                 │
 │                                                             │
-│  Data Integration                                          │
-│        ↓                                                    │
-│  Semantic Model                                             │
-│        ↓                                                    │
+│  Data Model                                                 │
 │  Relationships                                              │
-│        ↓                                                    │
+│  Semantic Model                                             │
 │  DAX Measures                                               │
-│        ↓                                                    │
-│  Business KPIs                                              │
+│  KPI Logic                                                  │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                ▼
@@ -92,290 +91,221 @@ The AI model is responsible for extracting structured signals from conversations
 │                  BUSINESS ANALYTICS                         │
 │                                                             │
 │  Customer Intent     Sentiment      Complaints              │
-│  Service Quality     Order Signals  Conversation Trends     │
-│  Chat → Order Conversion                                     │
+│  Service Quality     Conversation Trends                    │
+│  Order-related Signals                                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# 3. Layer 1 — Customer Conversation Data
+# 3. Architecture Layers
 
-The pipeline begins with customer conversations.
+The solution can be divided into six logical layers.
 
-At this stage, the data is primarily unstructured or semi-structured and may contain:
+| Layer                   | Responsibility                                    |
+| ----------------------- | ------------------------------------------------- |
+| Customer Data           | Provides conversation and operational context     |
+| Conversation Processing | Prepares conversations for AI inference           |
+| AI Model                | Classifies customer conversations                 |
+| Ollama                  | Executes local model inference                    |
+| SQL Server              | Stores and integrates structured data             |
+| Power BI                | Provides semantic modeling and business analytics |
 
-* Customer messages
-* Conversation/session identifiers
-* Timestamps
-* Sender information
-* Channel information
-* Conversation events
-* Order-related information
-
-The purpose of this layer is to provide the raw business context required for downstream AI classification and analytics.
-
-The public repository does not contain production conversation data.
+This separation allows each component to have a clearly defined responsibility.
 
 ---
 
-# 4. Layer 2 — Conversation Processing
+# 4. Customer Conversation Layer
 
-Before sending conversations to the language model, the data needs to be transformed into an appropriate inference format.
+The pipeline begins with customer conversation data.
 
-Conceptually:
+The underlying data contains the context required to understand customer interactions and support downstream analytics.
+
+At a high level, the data domain includes:
+
+* Customer conversations
+* Sessions
+* Conversation events
+* Operational context
+* Channel information
+* Order-related context
+
+The public repository does not contain production customer conversations.
+
+---
+
+# 5. Conversation Processing Layer
+
+Before inference, conversation data is transformed into a consistent format for the language model.
+
+The conceptual flow is:
 
 ```text
 Raw Conversation
        ↓
-Session Identification
+Session Preparation
        ↓
-Message Ordering
+Message / Event Ordering
        ↓
 Conversation Formatting
        ↓
 AI Input
 ```
 
-The objective is to create a consistent input representation for the fine-tuned model.
+The purpose of this layer is to provide the model with sufficient conversational context while maintaining a consistent input structure.
 
 ---
 
-# 5. Layer 3 — AI Labeling
+# 6. AI Layer
 
-## 5.1 Model
-
-The AI layer uses a pharmacy-domain fine-tuned version of:
+The AI component uses a pharmacy-domain fine-tuned language model based on:
 
 **Llama 3.1 8B Instruct**
 
-The model was fine-tuned using pharmacy customer conversation examples to improve its ability to classify business-specific customer intents and sentiment.
+The model was adapted for customer conversation classification using parameter-efficient fine-tuning.
 
-The training workflow uses parameter-efficient fine-tuning rather than updating all parameters of the base model.
-
----
-
-## 5.2 Fine-Tuning Flow
+The training workflow can be represented as:
 
 ```text
 Llama 3.1 8B Instruct
-            │
-            ▼
-      Training Dataset
-            │
-            ▼
-       LoRA / QLoRA
-            │
-            ▼
-   Supervised Fine-Tuning
-            │
-            ▼
-     Pharmacy V3 Model
+          ↓
+Pharmacy Conversation Dataset
+          ↓
+LoRA / QLoRA
+          ↓
+Supervised Fine-Tuning
+          ↓
+Pharmacy V3
 ```
 
-The resulting model is then prepared for local inference.
+The model is designed primarily for structured classification rather than general-purpose chatbot interaction.
 
 ---
 
-## 5.3 Model Packaging
+# 7. Ollama Inference Layer
 
-The model development workflow includes model conversion and quantization:
+Ollama is used as the local inference runtime for the fine-tuned model.
 
-```text
-Fine-tuned Model
-      ↓
-   GGUF FP16
-      ↓
- Q4_K_M Quantization
-      ↓
-    Ollama
-```
-
-Quantization allows the model to be deployed with reduced memory requirements while retaining the ability to perform the required classification tasks.
-
----
-
-# 6. Layer 4 — Ollama Inference
-
-Ollama serves as the local inference runtime for the fine-tuned model.
-
-Its responsibility is to execute the model and return structured classification results.
-
-Conceptually:
+The responsibility of Ollama is to execute the model and return structured AI output.
 
 ```text
 Conversation
-     │
-     ▼
-Python / Inference Process
-     │
-     ▼
+      ↓
+Inference Process
+      ↓
 Ollama
-     │
-     ▼
-Pharmacy V3 Model
-     │
-     ▼
+      ↓
+Pharmacy V3
+      ↓
 Structured AI Output
 ```
 
-Example output:
+A simplified output can contain information such as:
 
-```json
-{
-  "labels": ["Khiếu nại giao hàng"],
-  "sentiment": "Negative"
-}
+```text
+Business Label
+Sentiment
+Classification Result
 ```
 
-The production inference implementation is not included in the public repository.
+The production model and inference implementation are not included in the public repository.
 
 ---
 
-# 7. Layer 5 — SQL Server
+# 8. SQL Server Data Layer
 
-SQL Server is the central integration and analytical storage layer.
+SQL Server acts as the central persistent data layer between AI inference and Power BI.
 
-This is a critical architectural component.
-
-The AI model does **not** directly become the Power BI data source.
-
-Instead:
+The core integration pattern is:
 
 ```text
 Ollama
+   ↓
+AI-generated results
    ↓
 SQL Server
    ↓
 Power BI
 ```
 
-This separation provides a persistent and queryable storage layer between AI inference and analytics.
+The AI runtime is therefore not treated as the reporting data source.
+
+Instead, model outputs are persisted in SQL Server and become part of the analytical data pipeline.
+
+This provides:
+
+* Persistent storage
+* Historical analysis
+* SQL-based transformation
+* Data quality control
+* Reusable downstream analytics
+* Decoupling between AI inference and BI reporting
 
 ---
 
-# 8. Fact Table Architecture
+# 9. Analytical Data Domains
 
-The analytical design separates conversation information from AI-generated labeling information.
+The Power BI semantic model is built on several analytical domains represented in the underlying data model.
 
-Conceptually, the SQL Server layer contains two primary fact tables.
-
-## Fact 1 — Conversation / Session Fact
-
-This fact stores conversation-level or session-level information.
-
-Conceptual attributes may include:
+Rather than exposing the production schema, the public architecture groups these into logical domains:
 
 ```text
-session_id
-conversation_id
-customer_id
-date_key
-channel
-created_datetime
-order-related information
-conversation attributes
+SQL Server
+    │
+    ├── Conversation / Omnichat Domain
+    │
+    ├── AI Chat Labeling Domain
+    │
+    ├── Session / Supporter Domain
+    │
+    ├── Omnichat Segmentation Domain
+    │
+    ├── Label / Category Reference Domain
+    │
+    └── Date / Supporting Dimensions
 ```
 
-The exact production schema is intentionally not disclosed.
+These domains provide the underlying data required by the Power BI semantic model.
+
+The public repository intentionally does not expose every production table or column.
 
 ---
 
-## Fact 2 — Chat Labeling Fact
+# 10. AI Labeling Data
 
-This fact stores AI-derived analytical attributes.
+The AI-generated classification results form a dedicated analytical domain.
 
-Conceptual attributes include:
+Conceptually:
 
 ```text
-session_id
-label
-category
-sentiment
-AI processing status
-order-related indicators
-classification metadata
+Customer Conversation
+        ↓
+      Ollama
+        ↓
+AI Classification
+        ↓
+SQL Server
+        ↓
+AI Labeling Data
 ```
 
-Again, the production schema and internal column names are excluded from this public repository.
+The labeling domain supports analytical attributes such as:
+
+* Business classification
+* Category
+* Sentiment
+* Order-related indicators
+* Classification metadata
+
+These attributes can then be analyzed alongside conversation and operational data.
 
 ---
 
-# 9. Why Two Fact Tables?
-
-Separating the two analytical domains provides several benefits.
-
-### Conversation data
-
-Answers:
-
-> What happened in the conversation?
-
-### AI labeling data
-
-Answers:
-
-> What did the AI identify from the conversation?
-
-This creates a logical separation:
-
-```text
-                 Conversation
-                      │
-          ┌───────────┴───────────┐
-          │                       │
-          ▼                       ▼
-   Conversation Fact       AI Labeling Fact
-          │                       │
-          │                 Label / Sentiment
-          │                       │
-          └───────────┬───────────┘
-                      │
-                      ▼
-                 Power BI
-```
-
-This structure also allows AI-generated attributes to evolve independently from the underlying conversation data.
-
----
-
-# 10. SQL Server as the Integration Layer
-
-The overall integration can be represented as:
-
-```text
-                  AI PIPELINE
-                       │
-                       ▼
-                  Ollama
-                       │
-                AI prediction
-                       │
-                       ▼
-              ┌────────────────┐
-              │   SQL Server   │
-              └───────┬────────┘
-                      │
-            ┌─────────┴─────────┐
-            ▼                   ▼
-    Conversation Fact    Chat Labeling Fact
-            │                   │
-            └─────────┬─────────┘
-                      ▼
-                 Power BI
-```
-
-This architecture prevents the BI layer from depending directly on the AI runtime.
-
-The AI runtime can therefore be changed or upgraded without fundamentally changing the Power BI analytical layer, provided that the downstream SQL data contract remains stable.
-
----
-
-# 11. Layer 6 — Power BI
+# 11. Power BI Semantic Model
 
 Power BI consumes the structured data stored in SQL Server.
 
-The analytical pipeline is:
+The analytical flow is:
 
 ```text
 SQL Server
@@ -391,156 +321,246 @@ DAX Measures
 Reports
 ```
 
-The Power BI layer is responsible for transforming the stored data into reusable business metrics.
+The semantic model provides a centralized layer for business definitions and reusable analytical logic.
+
+The model reconstructed from the production metadata contains multiple analytical tables, supporting dimensions, relationships, and measures.
+
+For the public repository, these are documented at the architectural level rather than exposing the complete production schema.
 
 ---
 
-# 12. Semantic Model
+# 12. Semantic Model Structure
 
-The semantic model provides a centralized analytical representation of the customer conversation domain.
-
-Conceptually:
+At a high level, the model combines:
 
 ```text
-                     Dim Date
-                        │
-                        │
-                        ▼
-Dim Customer ─── Fact Conversation ─── Dim Channel
-                        │
+                    Date / Time
                         │
                         ▼
-                Fact Chat Labeling
+Conversation / Omnichat ──────── Supporting Dimensions
+        │
+        │
+        ├──────── AI Labeling
+        │
+        ├──────── Session / Operational Context
+        │
+        └──────── Segmentation / Classification
                         │
-              ┌─────────┼─────────┐
-              ▼         ▼         ▼
-           Label    Sentiment   Category
+                        ▼
+                 Power BI Measures
+                        │
+                        ▼
+                   Business KPIs
 ```
 
-The exact production semantic model is proprietary and is therefore not included in this repository.
+The exact production relationships are intentionally omitted from the public documentation.
 
 ---
 
 # 13. Business Analytics Layer
 
-The semantic model supports analysis across several dimensions.
+The semantic model supports analysis across several business dimensions.
 
-### Customer
-
-* Customer volume
-* Customer sentiment
-* Negative customer identification
-* Customer conversation behavior
-
-### Conversation
+### Conversation Analytics
 
 * Session volume
 * Conversation trends
 * Channel distribution
-* Label distribution
+* Conversation segmentation
 
-### Sentiment
+### Customer Analytics
 
-* Positive
-* Negative
-* Neutral
-* Mixed
+* Customer volume
+* Customer interaction behavior
+* Negative customer identification
+* Customer sentiment
 
-### Business Labels
+### AI Classification
 
-* Product inquiries
-* Ordering
-* Delivery
-* Complaints
-* Service feedback
-* Other customer intents
+* Business label distribution
+* Category distribution
+* Sentiment distribution
+* Negative conversation trends
 
-### Commercial Signals
+### Commercial Analytics
 
 * Order-related conversations
-* Chat-to-order conversion
+* Chat-to-order signals
 * Customer interaction patterns
 
 ---
 
-# 14. Example Analytical Flow
+# 14. KPI Layer
 
-A business user may start from an executive KPI:
+The Power BI semantic model centralizes business metrics.
+
+Examples of analytical KPI categories include:
 
 ```text
+Conversation Volume
+        ↓
+Customer Volume
+        ↓
+Negative Conversations
+        ↓
+Negative Customers
+        ↓
 Negative Conversation Rate
-            │
-            ▼
-       Category
-            │
-            ▼
-     Complaint Type
-            │
-            ▼
-        Session
-            │
-            ▼
-     Conversation
+        ↓
+Order-related Sessions
+        ↓
+Chat-to-Order Analysis
 ```
 
-This creates a drill-down path from aggregated business performance to the underlying customer interaction.
+The production semantic model contains the actual DAX implementation.
+
+The public repository documents the business meaning of these metrics rather than publishing the complete production measure library.
 
 ---
 
-# 15. Architecture Principles
+# 15. End-to-End Data Flow
 
-## Separation of Concerns
-
-Each layer has a distinct responsibility.
+The complete solution can be summarized as:
 
 ```text
-AI
-↓
-Classification
-
-SQL Server
-↓
-Storage + Integration
-
-Power BI
-↓
-Semantic Modeling + Analytics
+                CUSTOMER
+                   │
+                   ▼
+          Customer Conversation
+                   │
+                   ▼
+          Conversation Processing
+                   │
+                   ▼
+              Pharmacy V3
+                   │
+                   ▼
+                Ollama
+                   │
+                   │
+          AI Classification
+                   │
+                   ▼
+              SQL Server
+                   │
+          ┌────────┴────────┐
+          │                 │
+          ▼                 ▼
+ Conversation Data    AI Labeling Data
+          │                 │
+          └────────┬────────┘
+                   ▼
+            Power BI Model
+                   │
+                   ▼
+             DAX / KPI
+                   │
+                   ▼
+          Business Analytics
 ```
 
----
-
-## Centralized Data Storage
-
-AI-generated results are persisted in SQL Server instead of relying on the model runtime as the system of record.
+This architecture separates **model inference**, **data storage**, and **business analytics**.
 
 ---
 
-## Reusable Analytics
+# 16. Separation of Responsibilities
 
-Business definitions are implemented in the semantic model so that different reports can reuse consistent KPI logic.
+Each component has a specific responsibility.
+
+### AI Model
+
+```text
+Understand conversation
+        ↓
+Generate classification
+```
+
+### Ollama
+
+```text
+Execute model inference
+        ↓
+Return AI output
+```
+
+### SQL Server
+
+```text
+Store structured results
+        ↓
+Integrate analytical data
+        ↓
+Provide persistent query layer
+```
+
+### Power BI
+
+```text
+Model data
+        ↓
+Define business logic
+        ↓
+Calculate KPIs
+        ↓
+Visualize insights
+```
+
+This separation prevents the BI layer from becoming dependent on the internal implementation of the AI model.
 
 ---
 
-## Traceability
+# 17. Why SQL Server Is Between AI and Power BI
 
-Aggregated metrics should remain traceable to session-level and conversation-level records.
+The architecture intentionally avoids:
+
+```text
+Ollama
+   ↓
+Power BI
+```
+
+Instead, the solution uses:
+
+```text
+Ollama
+   ↓
+SQL Server
+   ↓
+Power BI
+```
+
+This provides a stable data contract between the AI and analytics layers.
+
+The AI model can therefore be retrained, replaced, or upgraded without requiring the Power BI report to directly interact with the model runtime.
+
+As long as the downstream analytical structure remains compatible, the BI layer can continue consuming the stored results.
 
 ---
 
-## Confidentiality
+# 18. Summary
 
-The public repository intentionally excludes production assets.
+The platform follows a clear end-to-end architecture:
 
-The architecture is documented at a level that demonstrates the solution design without exposing:
+```text
+Unstructured Customer Conversations
+                ↓
+        AI Classification
+                ↓
+             Ollama
+                ↓
+          SQL Server
+                ↓
+      Power BI Semantic Model
+                ↓
+          Business KPIs
+                ↓
+       Customer Insights
+```
 
-* Customer data
-* Production database details
-* Internal server information
-* Credentials
-* Production model artifacts
-* Proprietary source code
-* Internal business configurations
+The central architectural principle is:
 
----
+> **The LLM performs interpretation, SQL Server provides the persistent analytical layer, and Power BI transforms the structured data into reusable business intelligence.**
 
-This repository should therefore be interpreted as a **sanitized architecture and methodology reference**, rather than a complete production deployment package.
+This separation allows the platform to combine AI-driven unstructured data processing with a conventional enterprise BI architecture while keeping production implementation details private.
+
+The objective is to demonstrate the engineering and analytical approach without exposing confidential company assets.
