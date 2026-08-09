@@ -25,6 +25,7 @@ Build a scalable BI solution that enables business users to monitor performance 
 ## Achievement
 
 I built and maintained a production-scale Power BI analytics solution monitoring 100K+ daily transactions and supporting 100+ business users, combining SQL, Python, ETL, dimensional modeling, and Power BI to deliver sales, customer, and operational insights.
+
 ---
 
 ## Solution
