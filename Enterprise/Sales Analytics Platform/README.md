@@ -18,6 +18,13 @@ The business required a centralized analytics platform capable of integrating da
 
 Existing reporting relied on fragmented datasets, lengthy refresh cycles, and disconnected reports, limiting operational visibility and executive decision-making. The platform also needed scalable semantic models capable of supporting large datasets while maintaining reliable daily refresh performance.
 
+## Goal
+
+Build a scalable BI solution that enables business users to monitor performance and identify actionable opportunities.
+
+## Achievement
+
+I built and maintained a production-scale Power BI analytics solution monitoring 100K+ daily transactions and supporting 100+ business users, combining SQL, Python, ETL, dimensional modeling, and Power BI to deliver sales, customer, and operational insights.
 ---
 
 ## Solution
