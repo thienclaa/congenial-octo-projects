@@ -540,24 +540,6 @@ Decision Support
 
 ---
 
-# Future Improvements
-
-Potential extensions include:
-
-* Automated model evaluation using a held-out validation dataset
-* Precision, recall, F1-score, and confusion-matrix monitoring
-* Model/version tracking
-* Automated inference pipelines
-* AI labeling quality monitoring
-* Human-in-the-loop review for uncertain classifications
-* Label taxonomy governance
-* Model drift monitoring
-* Automated retraining workflows
-* API-based model serving
-* Production-grade orchestration and monitoring
-
----
-
 ## Disclaimer
 
 This project description is a sanitized representation of an enterprise implementation. Names, datasets, production infrastructure, schemas, customer information, and proprietary implementation details have been intentionally omitted or generalized for confidentiality.
