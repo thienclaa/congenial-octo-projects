@@ -2,437 +2,389 @@
 
 ## 1. Overview
 
-The Power BI semantic model is designed to transform customer conversation data and AI-generated classifications into reusable business analytics.
+The Power BI semantic model integrates customer conversation data, AI-generated conversation classifications, operational session information, conversation segmentation, and reference data into a centralized analytical model.
 
-The model combines several analytical domains rather than relying on a single fact table.
+The production model contains six main tables:
 
-At a high level:
+| Public Name | Analytical Role |
+|---|---|---|
+| `dim_date` | Time-based analysis |
+| `dim_label` | Category / subcategory / label reference |
+| `fact_conversation` | Customer conversation analysis |
+| `fact_chat_labeling` | AI classification and sentiment analysis |
+| `fact_conversation_segment` | Conversation segmentation |
+| `fact_session_support` | Session and support context |
+
+Production table names are replaced with public-safe names in the documentation. Individual production columns are intentionally not documented.
+
+---
+
+## 2. Logical Model
+
+The semantic model can be represented at a high level as:
 
 ```text
-Conversation / Omnichat Data
-            │
-            ├──────────────┐
-            │              │
-            ▼              ▼
-     Session Context   AI Labeling
-            │              │
-            └───────┬──────┘
-                    │
-                    ▼
-             Supporting Dimensions
-                    │
-                    ▼
-             Power BI Semantic Model
-                    │
-                    ▼
-                DAX / KPIs
+                         dim_date
+                            |
+                            |
+                            v
+                  fact_conversation
+                            |
+                            |
+                            v
+                  fact_chat_labeling
+                     ^      ^      ^
+                     |      |      |
+                     |      |      |
+                 dim_label  |      |
+                            |      |
+             fact_conversation_segment
+                            |
+                            |
+                  fact_session_support
 ```
 
-The production semantic model is represented in this repository at an architectural level. Individual production columns, source queries, credentials, and other implementation details are intentionally excluded.
+The model combines conversation data, AI-generated classification, segmentation, operational session information, and reference data.
 
 ---
 
-# 2. Modeling Objective
+## 3. Data Model Components
 
-The data model is designed to answer three major business questions:
-
-### 1. What happened?
-
-Understand customer conversations, sessions, channels, and interaction volume.
-
-### 2. What did the conversation mean?
-
-Use AI-generated labels and sentiment to classify customer intent and experience.
-
-### 3. What business outcome was associated with the interaction?
-
-Analyze order-related conversations and customer conversion signals.
-
-This creates the following analytical chain:
+The model consists of four main types of analytical components:
 
 ```text
-Conversation
-     ↓
-Session
-     ↓
-AI Classification
-     ↓
-Customer Experience
-     ↓
-Business Outcome
+Dimensions
+    |
+    +-- dim_date
+    |
+    +-- dim_label
+
+Analytical Data
+    |
+    +-- fact_conversation
+    |
+    +-- fact_chat_labeling
+    |
+    +-- fact_conversation_segment
+
+Operational Context
+    |
+    +-- fact_session_support
 ```
 
 ---
 
-# 3. Main Analytical Domains
+## 4. Date Dimension
 
-The semantic model can be grouped into several logical domains.
+### Public Name
+
+`dim_date`
+
+### Production Table
+
+`dateDim`
+
+The date dimension provides the common time context used throughout the semantic model.
+
+It supports analysis by:
+
+- Date
+- Day
+- Day of week
+- Day of year
+- Month
+- Date offset
+- End of month
+
+Conceptually:
 
 ```text
-┌────────────────────────────────────────────────────┐
-│                POWER BI MODEL                      │
-│                                                    │
-│  Conversation / Omnichat                           │
-│             │                                      │
-│             ├── Session / Operational Context      │
-│             │                                      │
-│             ├── AI Chat Labeling                   │
-│             │                                      │
-│             ├── Segmentation / Classification      │
-│             │                                      │
-│             └── Label Reference                    │
-│                                                    │
-│  Date / Supporting Dimensions                      │
-└────────────────────────────────────────────────────┘
+dim_date
+    |
+    +-- Day
+    +-- Week
+    +-- Month
+    +-- Quarter
+    +-- Year
 ```
 
-The production model contains multiple tables supporting these domains.
+The date dimension is used to support time-based analysis of conversation activity and related analytical metrics.
 
 ---
 
-# 4. Conversation / Omnichat Domain
+## 5. Conversation Fact
 
-The core conversation domain is represented by:
+### Public Name
 
-**`fact_conversation`**
+`fact_conversation`
 
-This domain contains the underlying customer interaction data used by the analytical model.
+### Production Table
 
-At a conceptual level, it represents:
+`f_omnichat_longchau_group`
 
-* Conversation activity
-* Message-level interaction
-* Customer / sender context
-* Communication channel
-* Conversation timing
-* Session-level analytical context
+This table represents the underlying customer conversation and Omnichat interaction data.
 
-The public documentation intentionally does not reproduce the complete production schema.
+At a high level, it provides the context required to analyze:
+
+- Customer conversations
+- Sessions
+- Communication channels
+- Conversation timing
+- Sender / customer activity
+- Message activity
+
+The public repository does not expose the complete production column schema.
 
 ---
 
-# 5. Conversation Grain
+## 6. Conversation Grain
 
-The conversation domain contains interaction-level information, while many business KPIs are calculated at the session level.
+The conversation data contains interaction-level information.
 
-This distinction is important.
+A customer can participate in multiple sessions, and a session can contain multiple messages.
+
+Conceptually:
 
 ```text
-One Customer
-      │
-      ├── Session A
-      │      ├── Message
-      │      ├── Message
-      │      └── Message
-      │
-      └── Session B
-             ├── Message
-             └── Message
+Customer
+   |
+   +-- Session A
+   |      |
+   |      +-- Message
+   |      +-- Message
+   |      +-- Message
+   |
+   +-- Session B
+          |
+          +-- Message
+          +-- Message
 ```
 
 Therefore:
 
 ```text
 Message volume
-      ≠
+      !=
 Session volume
-      ≠
+      !=
 Customer volume
 ```
 
-The semantic model uses different aggregation logic depending on the analytical question.
+This distinction is important when defining Power BI measures.
 
 ---
 
-# 6. AI Chat Labeling Domain
+## 7. Chat Labeling Fact
 
-The AI labeling domain is represented by:
+### Public Name
 
-**`fact_chat_labeling`**
+`fact_chat_labeling`
 
-This is the primary analytical layer for AI-generated conversation classification.
+This table contains the AI-generated classification results associated with customer conversations.
+
+The labeling domain supports analytical attributes such as:
+
+- Category
+- Subcategory / label
+- Sentiment
+- Order-related classification
+- AI-generated labeling information
+- Conversation / session context
 
 Conceptually:
 
 ```text
 Customer Conversation
-        │
-        ▼
-   AI Processing
-        │
-        ▼
-  Chat Labeling
-        │
-   ┌────┼─────┐
-   ▼    ▼     ▼
- Label Category Sentiment
+        |
+        v
+AI Classification
+        |
+        v
+fact_chat_labeling
+        |
+        +-- Category
+        +-- Subcategory
+        +-- Label
+        +-- Sentiment
+        +-- Order Signal
 ```
 
-The labeling domain supports analytical attributes such as:
-
-* Business classification
-* Category
-* Sentiment
-* Order-related indicators
-* Classification metadata
+The complete production schema is intentionally excluded.
 
 ---
 
-# 7. AI Labeling Grain
+## 8. Label Reference
 
-The AI labeling domain is analyzed primarily at the conversation/session level.
+### Public Name
 
-The central analytical concept is:
+`dim_label`
 
-```text
-Session
-   ↓
-AI classification
-   ↓
-Business label
-   ↓
-Sentiment
-```
+This table provides the reference structure used to organize conversation labels.
 
-This allows the model to calculate metrics such as:
-
-* Positive conversations
-* Negative conversations
-* Negative customers
-* Complaint sessions
-* Order-related sessions
-* Label distribution
-
----
-
-# 8. Session / Operational Context
-
-The semantic model also contains supporting data related to session and operational context.
-
-This domain is represented by:
-
-**`fact_session_support`**
-
-Its purpose is to provide additional context around customer interactions and connect conversation analytics with operational information.
-
-Conceptually:
-
-```text
-Conversation
-     │
-     ▼
-Session
-     │
-     ├── Operational context
-     ├── Support context
-     └── Interaction attributes
-```
-
-This layer is kept separate from the AI classification domain so that operational information and model-generated interpretation remain logically distinct.
-
----
-
-# 9. Conversation Segmentation
-
-The model also includes a conversation segmentation domain represented by:
-
-**`fact_conversation_segment`**
-
-Its purpose is to provide additional analytical segmentation of conversation activity.
-
-Conceptually:
-
-```text
-Conversation
-     │
-     ▼
-Conversation Segment
-     │
-     ├── Segment A
-     ├── Segment B
-     └── Segment C
-```
-
-This allows Power BI to analyze conversation behavior beyond raw session volume.
-
----
-
-# 10. Label Reference Layer
-
-The semantic model contains a reference layer for business labels and their categorization.
-
-This domain is represented by:
-
-**`dim_label`**
-
-Conceptually:
+The classification hierarchy can be represented as:
 
 ```text
 Category
-    │
-    ▼
+    |
+    v
 Subcategory
-    │
-    ▼
+    |
+    v
 Label
 ```
 
-This hierarchy makes AI classification output easier to aggregate and analyze in Power BI.
+This allows AI-generated labels to be grouped into higher-level business categories for reporting.
 
-The production taxonomy is intentionally generalized in this repository.
+The production taxonomy is not reproduced in the public repository.
 
 ---
 
-# 11. Date Dimension
+## 9. Conversation Segmentation
 
-Time is a common analytical dimension across the model.
+### Public Name
 
-The public model represents this dimension as:
+`fact_conversation_segment`
 
-**`dim_date`**
+This table provides segmentation information associated with Omnichat conversation activity.
 
-It supports:
+At a conceptual level, it supports:
 
-* Daily analysis
-* Monthly trends
-* Period comparisons
-* Channel trends
-* Sentiment trends
-* Order-related trends
+- Conversation segmentation
+- Message / session-level segmentation metrics
+- Sender-level analytical context
+- Segment-based analysis
 
-Conceptually:
+The production implementation and detailed column definitions are intentionally excluded.
+
+---
+
+## 10. Session Support Context
+
+### Public Name
+
+`fact_session_support`
+
+This table provides supporting operational information associated with conversation sessions.
+
+Its purpose is to provide context such as:
+
+- Session
+- Sender
+- Support assignment
+- Supporter information
+- Operational skill / support context
+
+This allows conversation and AI labeling data to be analyzed together with the operational context surrounding a session.
+
+---
+
+## 11. Relationship Structure
+
+The semantic model uses relationships between reference, analytical, and operational tables.
+
+At a conceptual level:
 
 ```text
-Date
- │
- ├── Day
- ├── Month
- ├── Quarter
- └── Year
+dim_date
+   |
+   v
+fact_conversation
+   |
+   v
+fact_chat_labeling
+   ^
+   |
+dim_label
 ```
 
----
-
-# 12. Logical Model
-
-The overall model can be represented as:
+The model also connects the labeling domain with conversation segmentation and session support context:
 
 ```text
-                         dim_date
-                            │
-                            │
-                            ▼
-                 fact_conversation
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-              ▼             ▼             ▼
-   fact_session_support  fact_chat_    fact_conversation_
-                         labeling          segment
-                              │
-                              │
-                         ┌────┼────┐
-                         ▼    ▼    ▼
-                      Category Label Sentiment
-                              │
-                              ▼
-                          dim_label
-                              │
-                              ▼
-                       Power BI KPIs
+fact_conversation_segment
+          |
+          v
+fact_chat_labeling
+          ^
+          |
+fact_session_support
 ```
 
-This is a logical representation of the semantic model, not a reproduction of the production relationship diagram.
+The exact relationship columns are intentionally omitted from the public documentation.
 
 ---
 
-# 13. Relationship Strategy
+## 12. Relationship Design
 
-The model connects analytical domains through shared business concepts such as:
+The model is designed around shared analytical concepts including:
 
-* Session
-* Customer / sender
-* Date
-* Channel
-* Classification
+- Date
+- Conversation
+- Session
+- Sender / customer
+- Classification
+- Segmentation
+- Support context
 
-The most important analytical key is the session because many KPIs are defined at the conversation/session level.
-
-Conceptually:
+The central analytical path is:
 
 ```text
 Conversation
-     │
-     │ Session
-     ▼
-AI Labeling
-     │
-     │ Classification
-     ▼
-Business Analysis
+     |
+     v
+Session
+     |
+     v
+AI Classification
+     |
+     +-- Category
+     +-- Label
+     +-- Sentiment
+     +-- Order Signal
 ```
 
-The exact production relationship metadata is intentionally not published.
+This allows the model to connect what happened during a customer interaction with how the conversation was classified.
 
 ---
 
-# 14. Why Session Is Important
+## 13. Conversation and AI Labeling
 
-Session is the primary unit for many conversation KPIs.
-
-For example:
+The most important analytical relationship is between the conversation domain and the AI labeling domain.
 
 ```text
-Total Sessions
-=
-Number of chat sessions
+fact_conversation
+        |
+        | Conversation / Session Context
+        v
+fact_chat_labeling
+        |
+        +-- Business Classification
+        +-- Sentiment
+        +-- Order-related Signal
 ```
 
-while:
+This separation provides two complementary perspectives:
 
 ```text
-Total Customers
-=
-Distinct customers participating in chat
+What happened?
+        |
+        v
+fact_conversation
+
+What did the AI identify?
+        |
+        v
+fact_chat_labeling
 ```
 
-A single customer can therefore contribute multiple sessions.
-
-This distinction is essential for preventing session-level volume from being interpreted as customer-level volume.
+Together they form the foundation of customer conversation analytics.
 
 ---
 
-# 15. Customer-Level Analysis
-
-Customer metrics require distinct-customer aggregation rather than simple session counting.
-
-Conceptually:
-
-```text
-Customer A
-   │
-   ├── Session 1
-   ├── Session 2
-   └── Session 3
-```
-
-The model can therefore distinguish:
-
-```text
-3 Sessions
-        ↓
-1 Customer
-```
-
-This distinction is particularly important for customer sentiment and customer conversion metrics.
-
----
-
-# 16. Sentiment Analytics
+## 14. Sentiment Analysis
 
 The AI labeling domain supports sentiment analysis.
 
-The classification framework includes:
+The project classification framework includes:
 
 ```text
 Positive
@@ -441,228 +393,347 @@ Neutral
 Mixed
 ```
 
-These classifications are used to distinguish customer experience outcomes.
+Conceptually:
 
 ```text
-Total Sessions
-      │
-      ├── Positive
-      ├── Neutral
-      ├── Negative
-      └── Mixed
+Customer Conversation
+        |
+        v
+Sentiment Classification
+        |
+        +-- Positive
+        +-- Negative
+        +-- Neutral
+        +-- Mixed
 ```
+
+These classifications allow customer experience and negative-conversation metrics to be calculated in Power BI.
 
 ---
 
-# 17. Negative Customer Analysis
+## 15. Customer-Level Analysis
 
-The semantic model distinguishes between:
+The semantic model distinguishes between session-level and customer-level analysis.
 
-### Negative Sessions
-
-Number of sessions classified as negative.
+For example:
 
 ```text
-Negative Sessions
-=
-Sessions with Negative Sentiment
+Customer A
+   |
+   +-- Session 1
+   +-- Session 2
+   +-- Session 3
 ```
 
-### Negative Customers
-
-Number of unique customers with at least one negative session.
+This means:
 
 ```text
-Negative Customers
-=
-Distinct customers
-with ≥ 1 negative session
+3 Sessions
+    |
+    v
+1 Customer
 ```
 
-This distinction prevents repeated interactions from being interpreted as multiple unique customers.
+Customer-level metrics therefore require distinct customer aggregation rather than simply counting sessions.
 
 ---
 
-# 18. Order Conversion Analytics
+## 16. Session-Level Analysis
 
-The data model also supports analysis of conversations associated with orders.
+Session is an important analytical unit in the model.
+
+Examples of session-level analysis include:
+
+- Total sessions
+- Sessions by channel
+- Positive sessions
+- Negative sessions
+- Complaint sessions
+- Order-related sessions
 
 Conceptually:
 
 ```text
-Chat Session
-     │
-     ▼
-Order Signal
-     │
-     ▼
-Order-related Session
+Total Sessions
+      |
+      +-- Channel
+      +-- Sentiment
+      +-- Classification
+      +-- Order-related activity
 ```
-
-The model supports measures for:
-
-* Sessions associated with orders
-* Order-related customers
-* Chat-to-order rate
-* Customer chat-to-order rate
-
-The exact production order logic is intentionally not published.
 
 ---
 
-# 19. KPI Architecture
+## 17. Conversation Classification
 
-The semantic model centralizes reusable measures.
-
-The major KPI groups are:
+The classification hierarchy allows business users to move from a high-level category toward a more specific conversation label.
 
 ```text
-Conversation KPIs
-├── Total Sessions
-├── Total Messages
-└── Channel Sessions
-
-Customer KPIs
-├── Total Customers
-├── Negative Customers
-└── Customers with Orders
-
-Sentiment KPIs
-├── Positive Sessions
-├── Negative Sessions
-└── Negative Conversation Rate
-
-Commercial KPIs
-├── Order Sessions
-├── Order Customers
-├── Chat-to-Order Rate
-└── Customer Conversion Rate
+Category
+    |
+    v
+Subcategory
+    |
+    v
+Label
+    |
+    v
+Conversation / Session
 ```
+
+This provides a structured way to analyze the reasons behind customer interactions.
 
 ---
 
-# 20. Semantic Layer in Power BI
+## 18. Order-Related Analysis
 
-The SQL Server data is consumed by Power BI and transformed into a reusable semantic model.
+The AI labeling domain contains an order-related classification signal.
+
+This enables the semantic model to distinguish between:
+
+```text
+Chat Sessions
+      |
+      +-- Order-related
+      |
+      +-- Non-order-related
+```
+
+This information can then be used to calculate commercial KPIs such as chat-to-order performance.
+
+---
+
+## 19. KPI Layer
+
+The semantic model centralizes reusable business measures.
+
+### Conversation KPIs
+
+```text
+Total Sessions
+Total Customers
+Total Messages
+Sessions by Channel
+```
+
+### Sentiment KPIs
+
+```text
+Positive Sessions
+Negative Sessions
+Negative Customers
+Negative Conversation Rate
+```
+
+### Customer-Service KPIs
+
+```text
+Complaint Sessions
+Negative Customer Rate
+Customer Experience Indicators
+```
+
+### Commercial KPIs
+
+```text
+Order-related Sessions
+Customers with Orders
+Chat-to-Order Rate
+Customer Chat-to-Order Rate
+```
+
+These measures are consumed by Power BI reports and dashboards.
+
+---
+
+## 20. Power BI Semantic Layer
+
+SQL Server provides the structured data consumed by Power BI.
+
+The analytical flow is:
 
 ```text
 SQL Server
-     ↓
+     |
+     v
 Data Integration
-     ↓
-Tables
-     ↓
-Relationships
-     ↓
-Measures
-     ↓
+     |
+     v
 Semantic Model
-     ↓
-Reports
+     |
+     v
+Relationships
+     |
+     v
+DAX Measures
+     |
+     v
+Power BI Reports
 ```
 
-The semantic model is responsible for:
+The semantic model provides a centralized layer for:
 
-* Defining relationships
-* Centralizing business metrics
-* Managing analytical dimensions
-* Supporting filter propagation
-* Providing reusable DAX measures
+- Relationships
+- Business definitions
+- DAX measures
+- Filtering
+- KPI calculations
+- Analytical dimensions
+
+This prevents business logic from being duplicated across individual visuals.
 
 ---
 
-# 21. Analytical Flow
+## 21. Analytical Drill-Down
 
-A typical analytical path is:
+A typical analytical drill-down can follow this path:
 
 ```text
-Date
- │
- ▼
-Channel
- │
- ▼
-Conversation
- │
- ▼
-Session
- │
- ▼
-AI Classification
- │
- ├── Category
- ├── Subcategory
- ├── Label
- └── Sentiment
- │
- ▼
 Business KPI
-```
-
-This allows an executive KPI to be drilled down into the underlying customer interaction domain.
-
----
-
-# 22. Example Business Analysis
-
-A business user may start with:
-
-```text
-Negative Conversation Rate
-```
-
-and drill down through:
-
-```text
-Negative Conversation Rate
-          ↓
+      |
+      v
+Sentiment / Classification
+      |
+      v
 Category
-          ↓
+      |
+      v
 Subcategory
-          ↓
+      |
+      v
 Label
-          ↓
+      |
+      v
 Session
-          ↓
+      |
+      v
 Conversation
 ```
 
-This creates a path from an aggregated business KPI to the underlying customer interaction.
+This allows users to move from an aggregated KPI to the underlying business reason behind the result.
 
 ---
 
-# 23. Summary
+## 22. Data Model Summary
 
-The data model connects customer interaction data with AI-generated business intelligence.
+The public-safe model can be summarized as:
 
 ```text
-Customer Conversations
-          │
-          ▼
-fact_conversation
-          │
-          ▼
-       Session
-          │
-          ├───────────────┐
-          │               │
-          ▼               ▼
-fact_session_support   fact_chat_labeling
-                          │
-                    ┌─────┼─────┐
-                    ▼     ▼     ▼
-                 Category Label Sentiment
-                          │
-                          ▼
-                       dim_label
-                          │
-                          ▼
-                    Business KPIs
-                          │
-                          ▼
+                         dim_date
+                            |
+                            |
+                            v
+                  fact_conversation
+                            |
+                            |
+                            v
+                  fact_chat_labeling
+                     ^      ^      ^
+                     |      |      |
+                     |      |      |
+                 dim_label  |      |
+                            |      |
+             fact_conversation_segment
+                            |
+                            |
+                  fact_session_support
+```
+
+The model combines:
+
+```text
+Conversation Data
+        +
+AI Classification
+        +
+Label Reference
+        +
+Conversation Segmentation
+        +
+Session Support Context
+        +
+Date Analysis
+        |
+        v
+Power BI Semantic Model
+        |
+        v
+Business KPIs
+```
+
+---
+
+## 23. Public Repository Scope
+
+The GitHub repository intentionally does not publish:
+
+- Production column-level schema
+- Production SQL queries
+- Customer conversation data
+- Database credentials
+- Internal server information
+- Connection strings
+- Production model files
+- Full semantic-model metadata
+- Proprietary implementation details
+
+Instead, the repository documents the architecture and analytical design.
+
+---
+
+## 24. Design Principles
+
+### Separation of Concerns
+
+Conversation data, AI classification, reference data, segmentation, and operational context are modeled as separate components.
+
+### Session-Aware Analytics
+
+Session-level and customer-level metrics are calculated separately to avoid incorrect aggregation.
+
+### Centralized Business Logic
+
+Business KPIs are defined in the Power BI semantic layer.
+
+### Reusable Analytical Model
+
+The same semantic model can support multiple reports and analytical views.
+
+### Public-Safe Documentation
+
+The repository exposes the analytical architecture without exposing production data or proprietary implementation details.
+
+---
+
+## 25. Summary
+
+The semantic model combines customer conversation data with AI-generated classification and supporting analytical context.
+
+```text
+                    Customer Conversations
+                            |
+                            v
+                  fact_conversation
+                            |
+                            v
+                  fact_chat_labeling
+                     ^      ^      ^
+                     |      |      |
+                     |      |      |
+                 dim_label  |      |
+                            |      |
+        fact_conversation_segment
+                            |
+                            |
+                  fact_session_support
+                            |
+                            v
                        Power BI
+                            |
+                            v
+                     Business KPIs
 ```
 
 The key design principle is:
 
-> **Model the customer interaction separately from the AI interpretation, then combine both through a reusable Power BI semantic layer.**
+> Separate customer interaction data from AI-generated interpretation, then combine both with reference and operational context in a centralized Power BI semantic model.
